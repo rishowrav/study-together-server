@@ -29,14 +29,20 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const studyCollection = client
+    const assignmentCollection = client
       .db("studyTogether")
       .collection("assignments");
+
+    // get assignment
+    app.get("/assignments", async (req, res) => {
+      const result = await assignmentCollection.find().toArray();
+      res.send(result);
+    });
 
     // post assignment
     app.post("/assignment", async (req, res) => {
       const assignment = req.body;
-      const result = await studyCollection.insertOne(assignment);
+      const result = await assignmentCollection.insertOne(assignment);
       res.send(result);
     });
 
