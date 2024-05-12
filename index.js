@@ -32,6 +32,7 @@ async function run() {
     const assignmentCollection = client
       .db("studyTogether")
       .collection("assignments");
+    const answerCollection = client.db("studyTogether").collection("answers");
 
     // get assignment single data
     app.get("/assignments/:id", async (req, res) => {
@@ -43,9 +44,23 @@ async function run() {
       res.send(result);
     });
 
+    // get answer
+    app.get("/answers", async (req, res) => {
+      const result = await answerCollection.find().toArray();
+      res.send(result);
+    });
+
     // get assignment
     app.get("/assignments", async (req, res) => {
       const result = await assignmentCollection.find().toArray();
+      res.send(result);
+    });
+
+    // post answer
+    app.post("/answer", async (req, res) => {
+      const answer = req.body;
+
+      const result = await answerCollection.insertOne(answer);
       res.send(result);
     });
 
