@@ -33,6 +33,16 @@ async function run() {
       .db("studyTogether")
       .collection("assignments");
 
+    // get assignment single data
+    app.get("/assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await assignmentCollection.findOne({
+        _id: new ObjectId(id),
+      });
+
+      res.send(result);
+    });
+
     // get assignment
     app.get("/assignments", async (req, res) => {
       const result = await assignmentCollection.find().toArray();
@@ -44,6 +54,27 @@ async function run() {
       const assignment = req.body;
 
       const result = await assignmentCollection.insertOne(assignment);
+      res.send(result);
+    });
+
+    // patch/update assignment
+    app.patch("/assignment/:id", async (req, res) => {
+      const assignment = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...assignment,
+        },
+      };
+
+      const result = await assignmentCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+
       res.send(result);
     });
 
