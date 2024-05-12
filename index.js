@@ -3,7 +3,7 @@ require("dotenv").config();
 var cors = require("cors");
 const app = express();
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cookieParser = require("cookie-parser");
 
 // middleWare
@@ -42,7 +42,17 @@ async function run() {
     // post assignment
     app.post("/assignment", async (req, res) => {
       const assignment = req.body;
+
       const result = await assignmentCollection.insertOne(assignment);
+      res.send(result);
+    });
+
+    // delete assignment
+    app.delete("/assignment/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const query = { _id: new ObjectId(id) };
+      const result = await assignmentCollection.deleteOne(query);
       res.send(result);
     });
 
