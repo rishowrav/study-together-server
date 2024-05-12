@@ -33,6 +33,13 @@ async function run() {
       .db("studyTogether")
       .collection("assignments");
 
+    // post assignment
+    app.post("/assignment", async (req, res) => {
+      const assignment = req.body;
+      const result = await studyCollection.insertOne(assignment);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
