@@ -88,7 +88,7 @@ async function run() {
     });
 
     // get assignment single data
-    app.get("/assignments/:id", verifyToken, async (req, res) => {
+    app.get("/assignments/:id", async (req, res) => {
       const id = req.params.id;
       const result = await assignmentCollection.findOne({
         _id: new ObjectId(id),
@@ -98,7 +98,7 @@ async function run() {
     });
 
     // get answers
-    app.get("/answers", verifyToken, async (req, res) => {
+    app.get("/answers", async (req, res) => {
       const result = await answerCollection.find().toArray();
       res.send(result);
     });
