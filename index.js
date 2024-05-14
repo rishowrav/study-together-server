@@ -5,11 +5,45 @@ const app = express();
 const port = process.env.PORT || 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 // middleWare
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
+
+// verify Token
+// Middleware
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+
+  if (!token) {
+    return res
+      .status(401)
+      .send({ message: "unauthorized access token, token ee nai re vai" });
+  }
+
+  jwt.verify(token, process.env.ENV_TOKEN, (err, decoded) => {
+    if (err) {
+      return res
+        .status(401)
+        .send({ message: "unauthorized access token, token valid na re vai" });
+    }
+
+    req.user = decoded;
+    next();
+  });
+};
 
 // Start MongoDb
 
@@ -34,8 +68,27 @@ async function run() {
       .collection("assignments");
     const answerCollection = client.db("studyTogether").collection("answers");
 
+    // jwt
+    app.post("/jwt", async (req, res) => {
+      const email = req.body;
+
+      // create token
+      const token = jwt.sign(email, process.env.ENV_TOKEN, {
+        expiresIn: "365d",
+      });
+
+      res.cookie("token", token, cookieOptions).send({ success: true });
+    });
+
+    // clearing token
+    app.get("/logout", async (req, res) => {
+      res
+        .clearCookie("token", { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
+    });
+
     // get assignment single data
-    app.get("/assignments/:id", async (req, res) => {
+    app.get("/assignments/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const result = await assignmentCollection.findOne({
         _id: new ObjectId(id),
@@ -44,8 +97,8 @@ async function run() {
       res.send(result);
     });
 
-    // get answer
-    app.get("/answers", async (req, res) => {
+    // get answers
+    app.get("/answers", verifyToken, async (req, res) => {
       const result = await answerCollection.find().toArray();
       res.send(result);
     });
@@ -69,6 +122,28 @@ async function run() {
       const assignment = req.body;
 
       const result = await assignmentCollection.insertOne(assignment);
+      res.send(result);
+    });
+
+    // patch/update answer/feedback
+    app.patch("/feedback/:id", async (req, res) => {
+      const id = req.params.id;
+      const newAnswer = req.body;
+
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...newAnswer,
+        },
+      };
+
+      const result = await answerCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+
       res.send(result);
     });
 
