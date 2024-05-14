@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 // middleWare
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://online-study-client.web.app"],
     credentials: true,
   })
 );
@@ -98,7 +98,7 @@ async function run() {
     });
 
     // get answers
-    app.get("/answers", async (req, res) => {
+    app.get("/answers", verifyToken, async (req, res) => {
       const result = await answerCollection.find().toArray();
       res.send(result);
     });
